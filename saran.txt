@@ -1,1 +1,2 @@
 this my first text
+new line added
