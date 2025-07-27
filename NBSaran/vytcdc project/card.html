@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Card</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .product-card {
+            background-color: #ffffff;
+            border-radius: 1rem; /* Increased border-radius for more rounded corners */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            max-width: 320px; /* Slightly increased max-width */
+            width: 100%;
+            padding: 1.5rem; /* Increased padding */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e0e0e0; /* Subtle border */
+        }
+        .product-image-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 75%; /* Aspect ratio 4:3 */
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .product-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Ensures the image fits without cropping */
+            transition: transform 0.3s ease, filter 0.3s ease; /* Added filter to transition */
+        }
+        /* New style for blurring the image */
+        .product-image-container.blur-active .product-image {
+            filter: blur(3px); /* Apply blur effect */
+        }
+        .rating {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+        .star {
+            color: #ffc107; /* Gold color for filled stars */
+            font-size: 1.25rem;
+            margin: 0 2px;
+        }
+        .star.empty {
+            color: #e0e0e0; /* Grey for empty stars */
+        }
+        .product-title {
+            font-size: 1.5rem; /* Increased font size */
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 0.5rem;
+        }
+        .divider {
+            width: 50px;
+            height: 2px;
+            background-color: #e0e0e0;
+            margin: 0.75rem auto 1rem; /* Adjusted margin */
+        }
+        .product-price {
+            font-size: 1.75rem; /* Increased font size */
+            font-weight: 700;
+            color: #28a745; /* Green color for price */
+            margin-bottom: 1.5rem;
+        }
+        /* Wrapper for all action buttons */
+        .action-buttons-wrapper {
+            width: 100%;
+            padding-top: 1.5rem; /* Increased padding-top for more space */
+            border-top: 1px solid #e9ecef; /* Light gray border at the top */
+            display: flex; /* To contain the buttons */
+            justify-content: center; /* Center the buttons within the wrapper */
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: space-around; /* Distribute buttons evenly */
+            width: 100%; /* Take full width of its wrapper */
+            max-width: 250px; /* Limit width to keep buttons closer */
+        }
+        .action-button {
+            background-color: #ffffff;
+            border: 2px solid #28a745; /* Green border */
+            color: #28a745;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .action-button:hover {
+            background-color: #28a745;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+        }
+        .action-button.main-action {
+            background-color: #28a745;
+            color: #ffffff;
+            border-color: #28a745;
+            width: 60px; /* Larger main button */
+            height: 60px;
+            font-size: 1.5rem;
+            box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
+        }
+        .action-button.main-action:hover {
+            background-color: #218838; /* Darker green on hover */
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.5);
+        }
+
+        /* Hidden by default, shown by JS */
+        .action-button.hidden-by-default {
+            opacity: 0;
+            pointer-events: none; /* Prevents interaction when hidden */
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: translateY(10px); /* Start slightly below */
+        }
+        .action-button.hidden-by-default.is-visible {
+            opacity: 1;
+            pointer-events: auto; /* Allows interaction when visible */
+            transform: translateY(0); /* Move to original position */
+        }
+
+        .tooltip {
+            visibility: hidden;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 120%; /* Position the tooltip above the button */
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: nowrap; /* Prevent text wrapping */
+            font-size: 0.85rem;
+        }
+        .action-button:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Eye icon for quick view */
+        .quick-view-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 2px solid #28a745;
+            color: #28a745;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+            cursor: pointer;
+            opacity: 0; /* Hidden by default */
+            pointer-events: none; /* Prevents interaction when hidden */
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 10;
+        }
+        .quick-view-button.is-visible {
+            opacity: 1;
+            pointer-events: auto; /* Allows interaction when visible */
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .quick-view-button:hover {
+            background-color: #28a745;
+            color: #ffffff;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 400px) {
+            .product-card {
+                padding: 1rem;
+            }
+            .product-title {
+                font-size: 1.3rem;
+            }
+            .product-price {
+                font-size: 1.5rem;
+            }
+            .action-button {
+                width: 45px;
+                height: 45px;
+                font-size: 1.1rem;
+            }
+            .action-button.main-action {
+                width: 55px;
+                height: 55px;
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="product-card" class="product-card"> <!-- Added ID to the main product card -->
+        <div id="product-image-container" class="product-image-container">
+            <!-- Placeholder image for the carrot -->
+            <img src="https://placehold.co/300x225/ffffff/000000?text=Carrot" alt="Carrots Edible Sugar" class="product-image">
+            <!-- Quick View Button -->
+            <div id="quick-view-button" class="quick-view-button">
+                <i class="fas fa-eye"></i>
+            </div>
+        </div>
+
+        <div class="rating">
+            <i class="fas fa-star star"></i>
+            <i class="fas fa-star star"></i>
+            <i class="fas fa-star star"></i>
+            <i class="fas fa-star star empty"></i>
+            <i class="fas fa-star star empty"></i>
+        </div>
+
+        <h2 class="product-title">Carrots Edible Sugar</h2>
+        <div class="divider"></div>
+        <p class="product-price">$9.49</p>
+
+        <!-- Wrapper for all action buttons -->
+        <div id="action-buttons-wrapper" class="action-buttons-wrapper">
+            <div class="action-buttons">
+                <button id="wishlist-button" class="action-button hidden-by-default">
+                    <i class="far fa-heart"></i>
+                    <span class="tooltip">Add to Wishlist</span>
+                </button>
+                <button id="add-to-cart-button" class="action-button main-action">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="tooltip">Add to Cart</span>
+                </button>
+                <button id="compare-button" class="action-button hidden-by-default">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span class="tooltip">Compare</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const productCard = document.getElementById('product-card'); // Get the main product card
+            const wishlistButton = document.getElementById('wishlist-button');
+            const compareButton = document.getElementById('compare-button');
+            const quickViewButton = document.getElementById('quick-view-button');
+            const productImageContainer = document.getElementById('product-image-container');
+
+            let hideTimeout; // Variable to store the timeout ID
+            const HIDE_DELAY = 500; // Increased delay to 500ms (0.5 seconds)
+
+            // Function to show all elements
+            const showElements = () => {
+                clearTimeout(hideTimeout); // Clear any pending hide timeouts
+                wishlistButton.classList.add('is-visible');
+                compareButton.classList.add('is-visible');
+                quickViewButton.classList.add('is-visible');
+                productImageContainer.classList.add('blur-active');
+            };
+
+            // Function to hide all elements with a delay
+            const hideElementsWithDelay = () => {
+                hideTimeout = setTimeout(() => {
+                    wishlistButton.classList.remove('is-visible');
+                    compareButton.classList.remove('is-visible');
+                    quickViewButton.classList.remove('is-visible');
+                    productImageContainer.classList.remove('blur-active');
+                }, HIDE_DELAY);
+            };
+
+            if (productCard && wishlistButton && compareButton && quickViewButton && productImageContainer) {
+                // Attach mouseenter/mouseleave to the entire product card
+                productCard.addEventListener('mouseenter', showElements);
+                productCard.addEventListener('mouseleave', hideElementsWithDelay);
+
+            } else {
+                console.error("One or more required elements not found. Please check IDs.");
+            }
+        });
+    </script>
+</body>
+</html>
